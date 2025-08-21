@@ -19,6 +19,19 @@ interface Order {
   product?: ProductInfo;
 }
 
+// Shape returned directly by Supabase, where `product` comes back as an array
+interface RawOrder {
+  id: string;
+  quantity: number;
+  total_price: number;
+  status: string;
+  created_at: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_address: string;
+  product: { name: string }[] | null;
+}
+
 export default function PendingOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -55,9 +68,12 @@ export default function PendingOrders() {
         console.error("Order fetch error:", error);
         toast.error("Failed to load orders");
       } else {
-        const normalized = (data as Array<any>).map((o) => ({
+        const normalized = (data as RawOrder[]).map((o) => ({
           ...o,
-          product: Array.isArray(o.product) && o.product.length > 0 ? o.product[0] : undefined,
+          product:
+            Array.isArray(o.product) && o.product.length > 0
+              ? o.product[0]
+              : undefined,
         }));
 
         setOrders(normalized as Order[]);
@@ -99,7 +115,7 @@ export default function PendingOrders() {
             <p className="text-sm text-gray-500">
               Ordered: {new Date(order.created_at).toLocaleString()}
             </p>
-            <div className="mt-2 text-sm">
+            <div className="mt-2 text-sm text-black">
               <p>📍 {order.customer_address || "No address provided"}</p>
               <p>📞 {order.customer_phone || "No phone number"}</p>
               <p>🧑 {order.customer_name || "No name provided"}</p>
