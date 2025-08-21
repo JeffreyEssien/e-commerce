@@ -1,4 +1,7 @@
 "use client";
+
+export const dynamic = "force-dynamic";
+
 import { useState } from "react";
 import PendingOrders from "./pendingOrders";
 import ManageProducts from "./manageProducts";
