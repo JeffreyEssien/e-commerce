@@ -4,10 +4,15 @@ import { supabase } from "../../../lib/supabase";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 
+type TopProduct = {
+  name: string;
+  quantity: number;
+};
+
 export default function VendorAnalytics() {
-  const [totalSales, setTotalSales] = useState(0);
-  const [orderCount, setOrderCount] = useState(0);
-  const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [totalSales, setTotalSales] = useState<number>(0);
+  const [orderCount, setOrderCount] = useState<number>(0);
+  const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
 
   useEffect(() => {
     fetchAnalytics();
@@ -57,17 +62,16 @@ export default function VendorAnalytics() {
     if (productError) {
       toast.error("Failed to fetch top products");
     } else {
-      const grouped = productData.reduce((acc, order) => {
+      const grouped: Record<string, TopProduct> = {};
+
+      productData?.forEach((order: any) => {
         const id = order.product_id;
-        if (!acc[id]) {
-          acc[id] = {
-            name: order.product?.name || "Unnamed",
-            quantity: 0,
-          };
+        const name = order.product?.name || "Unnamed";
+        if (!grouped[id]) {
+          grouped[id] = { name, quantity: 0 };
         }
-        acc[id].quantity += order.quantity;
-        return acc;
-      }, {} as Record<string, { name: string; quantity: number }>);
+        grouped[id].quantity += order.quantity;
+      });
 
       const sorted = Object.values(grouped).sort(
         (a, b) => b.quantity - a.quantity
