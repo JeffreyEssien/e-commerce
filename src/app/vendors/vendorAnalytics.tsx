@@ -9,6 +9,12 @@ type TopProduct = {
   quantity: number;
 };
 
+interface RawOrder {
+  product_id: string;
+  quantity: number;
+  product: { name: string }[] | null;
+}
+
 export default function VendorAnalytics() {
   const [totalSales, setTotalSales] = useState<number>(0);
   const [orderCount, setOrderCount] = useState<number>(0);
@@ -64,9 +70,13 @@ export default function VendorAnalytics() {
     } else {
       const grouped: Record<string, TopProduct> = {};
 
-      productData?.forEach((order: any) => {
+      (productData as RawOrder[]).forEach((order) => {
         const id = order.product_id;
-        const name = order.product?.name || "Unnamed";
+        const name =
+          Array.isArray(order.product) && order.product.length > 0
+            ? order.product[0].name
+            : "Unnamed";
+
         if (!grouped[id]) {
           grouped[id] = { name, quantity: 0 };
         }

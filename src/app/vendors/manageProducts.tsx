@@ -3,16 +3,41 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
+import Image from "next/image";
+
+interface Campus {
+  id: string;
+  name: string;
+}
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  campus_id: string;
+  image_url?: string;
+  vendor_id: string;
+  status: string;
+}
+
+interface NewProductForm {
+  name: string;
+  price: string;
+  category: string;
+  campus_id: string;
+  imageFile: File | null;
+}
 
 export default function ManageProducts() {
-  const [products, setProducts] = useState<any[]>([]);
-  const [campuses, setCampuses] = useState<any[]>([]);
-  const [newProduct, setNewProduct] = useState({
+  const [products, setProducts] = useState<Product[]>([]);
+  const [campuses, setCampuses] = useState<Campus[]>([]);
+  const [newProduct, setNewProduct] = useState<NewProductForm>({
     name: "",
     price: "",
     category: "",
     campus_id: "",
-    imageFile: null as File | null,
+    imageFile: null,
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -26,12 +51,14 @@ export default function ManageProducts() {
     if (error) {
       toast.error("Failed to load campuses");
     } else {
-      setCampuses(data || []);
+      setCampuses((data as Campus[]) || []);
     }
   };
 
   const fetchProducts = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     const vendorId = session?.user?.id;
 
     const { data, error } = await supabase
@@ -42,7 +69,7 @@ export default function ManageProducts() {
     if (error) {
       toast.error("Failed to load products");
     } else {
-      setProducts(data || []);
+      setProducts((data as Product[]) || []);
     }
   };
 
@@ -67,10 +94,17 @@ export default function ManageProducts() {
   };
 
   const addProduct = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     const vendorId = session?.user?.id;
 
-    if (!newProduct.name || !newProduct.price || !newProduct.category || !newProduct.campus_id) {
+    if (
+      !newProduct.name ||
+      !newProduct.price ||
+      !newProduct.category ||
+      !newProduct.campus_id
+    ) {
       toast.error("Please fill out all fields");
       return;
     }
@@ -96,7 +130,13 @@ export default function ManageProducts() {
       toast.error("Failed to add product");
     } else {
       toast.success("Product added 🎉");
-      setNewProduct({ name: "", price: "", category: "", campus_id: "", imageFile: null });
+      setNewProduct({
+        name: "",
+        price: "",
+        category: "",
+        campus_id: "",
+        imageFile: null,
+      });
       setImagePreview(null);
       fetchProducts();
     }
@@ -132,7 +172,9 @@ export default function ManageProducts() {
           type="text"
           placeholder="Product Name"
           value={newProduct.name}
-          onChange={(e) => setNewProduct((p) => ({ ...p, name: e.target.value }))}
+          onChange={(e) =>
+            setNewProduct((p) => ({ ...p, name: e.target.value }))
+          }
           className="border p-2 rounded w-full mb-2"
         />
 
@@ -140,13 +182,17 @@ export default function ManageProducts() {
           type="number"
           placeholder="Price"
           value={newProduct.price}
-          onChange={(e) => setNewProduct((p) => ({ ...p, price: e.target.value }))}
+          onChange={(e) =>
+            setNewProduct((p) => ({ ...p, price: e.target.value }))
+          }
           className="border p-2 rounded w-full mb-2"
         />
 
         <select
           value={newProduct.category}
-          onChange={(e) => setNewProduct((p) => ({ ...p, category: e.target.value }))}
+          onChange={(e) =>
+            setNewProduct((p) => ({ ...p, category: e.target.value }))
+          }
           className="border p-2 rounded w-full mb-2"
         >
           <option value="">Select Category</option>
@@ -159,7 +205,9 @@ export default function ManageProducts() {
 
         <select
           value={newProduct.campus_id}
-          onChange={(e) => setNewProduct((p) => ({ ...p, campus_id: e.target.value }))}
+          onChange={(e) =>
+            setNewProduct((p) => ({ ...p, campus_id: e.target.value }))
+          }
           className="border p-2 rounded w-full mb-2"
         >
           <option value="">Select Campus</option>
@@ -171,12 +219,16 @@ export default function ManageProducts() {
         </select>
 
         <label className="border-2 border-dashed border-gray-400 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500 transition">
-          <span className="text-gray-600 font-medium">📷 Click or Drop to Add Image</span>
+          <span className="text-gray-600 font-medium">
+            📷 Click or Drop to Add Image
+          </span>
           {imagePreview && (
-            <img
+            <Image
               src={imagePreview}
               alt="Preview"
-              className="mt-2 h-20 w-20 object-cover rounded-lg shadow"
+              width={80}
+              height={80}
+              className="mt-2 object-cover rounded-lg shadow"
             />
           )}
           <input
@@ -216,10 +268,12 @@ export default function ManageProducts() {
                 className="p-4 bg-white border rounded-lg shadow-sm hover:shadow-md transition"
               >
                 {p.image_url && (
-                  <img
+                  <Image
                     src={p.image_url}
                     alt={p.name}
-                    className="h-32 w-full object-cover rounded-md mb-2"
+                    width={400}
+                    height={200}
+                    className="object-cover rounded-md mb-2"
                   />
                 )}
                 <h3 className="font-semibold">{p.name}</h3>

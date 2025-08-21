@@ -3,9 +3,25 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import toast from "react-hot-toast";
 
+interface ProductInfo {
+  name: string;
+}
+
+interface Order {
+  id: string;
+  quantity: number;
+  total_price: number;
+  status: string;
+  created_at: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_address: string;
+  product?: ProductInfo;
+}
+
 export default function PendingOrders() {
-  const [orders, setOrders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -39,7 +55,12 @@ export default function PendingOrders() {
         console.error("Order fetch error:", error);
         toast.error("Failed to load orders");
       } else {
-        setOrders(data || []);
+        const normalized = (data as Array<any>).map((o) => ({
+          ...o,
+          product: Array.isArray(o.product) && o.product.length > 0 ? o.product[0] : undefined,
+        }));
+
+        setOrders(normalized as Order[]);
       }
       setLoading(false);
     };
