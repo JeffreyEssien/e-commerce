@@ -4,12 +4,31 @@ import { supabase } from "../../../lib/supabase";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 
+interface Vendor {
+  id: string;
+  shop_name: string;
+  email: string;
+  bio: string;
+  status: string;
+  rating: number;
+  ratings_count: number;
+  campus_id: string;
+}
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  status: string;
+  vendor_id: string;
+}
+
 export default function AdminDashboard() {
-  const [vendors, setVendors] = useState<any[]>([]);
-  const [productsByVendor, setProductsByVendor] = useState<Record<string, any[]>>({});
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [productsByVendor, setProductsByVendor] = useState<Record<string, Product[]>>({});
   const [campuses, setCampuses] = useState<Record<string, string>>({});
-  const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,19 +44,19 @@ export default function AdminDashboard() {
       ]);
 
       if (vendorRes.error) toast.error("Failed to load vendors");
-      else setVendors(vendorRes.data || []);
+      else setVendors(vendorRes.data as Vendor[]);
 
       if (campusRes.data) {
         const campusMap: Record<string, string> = {};
-        campusRes.data.forEach((c) => {
+        campusRes.data.forEach((c: { id: string; name: string }) => {
           campusMap[c.id] = c.name;
         });
         setCampuses(campusMap);
       }
 
       if (productRes.data) {
-        const grouped: Record<string, any[]> = {};
-        productRes.data.forEach((p) => {
+        const grouped: Record<string, Product[]> = {};
+        (productRes.data as Product[]).forEach((p) => {
           if (!grouped[p.vendor_id]) grouped[p.vendor_id] = [];
           grouped[p.vendor_id].push(p);
         });
@@ -88,8 +107,8 @@ export default function AdminDashboard() {
 
   const filteredVendors = vendors.filter((v) =>
     productsByVendor[v.id]?.length &&
-    (v.shop_name?.toLowerCase().includes(search.toLowerCase()) ||
-      v.email?.toLowerCase().includes(search.toLowerCase()))
+    (v.shop_name.toLowerCase().includes(search.toLowerCase()) ||
+      v.email.toLowerCase().includes(search.toLowerCase()))
   );
 
   return (
@@ -173,7 +192,6 @@ export default function AdminDashboard() {
                 </button>
               )}
 
-              {/* Products */}
               <div className="space-y-2">
                 {productsByVendor[vendor.id]?.map((product) => (
                   <div

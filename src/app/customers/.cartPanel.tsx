@@ -4,17 +4,31 @@ import { supabase } from "../../../lib/supabase";
 import toast from "react-hot-toast";
 import { useState } from "react";
 
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  vendor_id: string;
+}
+
+type UpdateQuantityFn = (productId: string, quantity: number) => void;
+type RemoveFromCartFn = (productId: string) => void;
+type ClearCartFn = () => void;
+
+interface CartPanelProps {
+  cart: CartItem[];
+  removeFromCart: RemoveFromCartFn;
+  updateQuantity: UpdateQuantityFn;
+  clearCart: ClearCartFn;
+}
+
 export default function CartPanel({
   cart,
   removeFromCart,
   updateQuantity,
   clearCart,
-}: {
-  cart: any[];
-  removeFromCart: Function;
-  updateQuantity: Function;
-  clearCart: Function;
-}) {
+}: CartPanelProps) {
   const [checkoutForm, setCheckoutForm] = useState({
     name: "",
     phone: "",

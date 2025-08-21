@@ -4,55 +4,67 @@ import { supabase } from "../../../lib/supabase";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
+interface Campus {
+  id: string;
+  name: string;
+}
+
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [role, setRole] = useState("");
-  const [campusId, setCampusId] = useState("");
-  const [shopName, setShopName] = useState("");
-  const [bio, setBio] = useState("");
-  const [campuses, setCampuses] = useState<any[]>([]);
-  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [name, setName] = useState<string>("");
+  const [role, setRole] = useState<string>("");
+  const [campusId, setCampusId] = useState<string>("");
+  const [shopName, setShopName] = useState<string>("");
+  const [bio, setBio] = useState<string>("");
+  const [campuses, setCampuses] = useState<Campus[]>([]);
+  const [isLogin, setIsLogin] = useState<boolean>(true);
+
   const router = useRouter();
 
-  // Fetch campuses from Supabase
+  // Fetch campuses
   useEffect(() => {
     const fetchCampuses = async () => {
-      const { data, error } = await supabase.from("campuses").select("id, name");
+      const { data, error } = await supabase
+        .from("campuses")
+        .select("id, name");
+
       if (error) {
         toast.error("Failed to load campuses");
-      } else {
-        setCampuses(data);
+        return;
       }
+      setCampuses((data as Campus[]) || []);
     };
     fetchCampuses();
   }, []);
 
+  // Redirect by role
   const redirectByRole = async (userId: string) => {
-  const { data: profile, error } = await supabase
-    .from("users")
-    .select("role")
-    .eq("id", userId)
-    .single();
+    const { data: profile, error } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", userId)
+      .single();
 
-  if (error || !profile) return;
+    if (error || !profile) return;
 
-  switch (profile.role) {
-    case "vendor":
-      router.push("/vendors");
-      break;
-    case "customer":
-      router.push("/customers");
-      break;
-    case "admin":
-      router.push("/admin");
-      break;
-    default:
-      router.push("/"); // fallback
-  }
-};
+    const { role } = profile as { role: string };
+    switch (role) {
+      case "vendor":
+        router.push("/vendors");
+        break;
+      case "customer":
+        router.push("/customers");
+        break;
+      case "admin":
+        router.push("/admin");
+        break;
+      default:
+        router.push("/");
+    }
+  };
 
+  // Email login/signup
   const handleEmailAuth = async () => {
     const cleanEmail = email.trim().toLowerCase();
 
@@ -73,9 +85,11 @@ export default function LoginPage() {
       });
 
       if (error) {
-        if (error.message === "Email not confirmed") {
-          toast.error("Please confirm your email before logging in.");
-        } else toast.error(error.message);
+        toast.error(
+          error.message === "Email not confirmed"
+            ? "Please confirm your email before logging in."
+            : error.message
+        );
         return;
       }
 
@@ -107,7 +121,7 @@ export default function LoginPage() {
         },
       ]);
 
-      // Insert into vendors table if role is vendor
+      // Insert into vendors if vendor role
       if (role === "vendor") {
         const { error: vendorErr } = await supabase.from("vendors").insert([
           {
@@ -132,6 +146,7 @@ export default function LoginPage() {
     }
   };
 
+  // Google login
   const handleGoogleLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -146,6 +161,7 @@ export default function LoginPage() {
           {isLogin ? "Login" : "Create an Account"}
         </h1>
 
+        {/* Email */}
         <input
           type="email"
           placeholder="Email"
@@ -154,6 +170,7 @@ export default function LoginPage() {
           onChange={(e) => setEmail(e.target.value)}
         />
 
+        {/* Password */}
         <input
           type="password"
           placeholder="Password"
@@ -162,6 +179,7 @@ export default function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
+        {/* Extra signup fields */}
         {!isLogin && (
           <>
             <input
@@ -215,6 +233,7 @@ export default function LoginPage() {
           </>
         )}
 
+        {/* Auth buttons */}
         <button
           onClick={handleEmailAuth}
           className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700"

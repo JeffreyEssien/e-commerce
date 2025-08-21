@@ -6,10 +6,30 @@ import CartPanel from "./.cartPanel";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 
+interface Campus {
+  id: string;
+  name: string;
+}
+
+interface Vendor {
+  shop_name: string;
+}
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  campus_id: string;
+  status: string;
+  vendor_id: string;
+  vendor?: Vendor;
+}
+
 export default function CustomerDashboard() {
-  const [products, setProducts] = useState<any[]>([]);
-  const [campuses, setCampuses] = useState<any[]>([]);
-  const [selectedCampus, setSelectedCampus] = useState("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [campuses, setCampuses] = useState<Campus[]>([]);
+  const [selectedCampus, setSelectedCampus] = useState<string>("");
   const { cart, addToCart, ...cartActions } = useCart();
 
   useEffect(() => {
@@ -25,10 +45,10 @@ export default function CustomerDashboard() {
         return;
       }
 
-      setCampuses(campusData || []);
+      setCampuses(campusData as Campus[]);
 
       // Fetch products with vendor info
-      const { data: productData, error: productError } = await supabase
+      const { data: rawProductData, error: productError } = await supabase
         .from("products")
         .select(`
           id,
@@ -50,8 +70,15 @@ export default function CustomerDashboard() {
         return;
       }
 
-      setProducts(productData || []);
-      console.log("Sample product:", productData?.[0]); // Debugging
+      // Flatten vendor array to single object
+      const normalized = (rawProductData as Array<Omit<Product, "vendor"> & { vendor: Vendor[] | null }>).map(
+        (p) => ({
+          ...p,
+          vendor: Array.isArray(p.vendor) && p.vendor.length > 0 ? p.vendor[0] : undefined,
+        })
+      );
+
+      setProducts(normalized);
     };
 
     fetchData();
