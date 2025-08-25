@@ -1,20 +1,24 @@
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 export const metadata: Metadata = {
   title: "Prime Stores - Campus Marketplace",
   description: "The ultimate campus marketplace connecting students, vendors, and administrators in a seamless digital ecosystem",
   keywords: ["campus", "marketplace", "students", "vendors", "university", "e-commerce"],
   authors: [{ name: "Prime Stores Team" }],
-  viewport: "width=device-width, initial-scale=1",
-  themeColor: "#667eea",
   openGraph: {
     title: "Prime Stores - Campus Marketplace",
     description: "The ultimate campus marketplace connecting students, vendors, and administrators",
     type: "website",
     siteName: "Prime Stores",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#667eea",
 };
 
 export default function RootLayout({
@@ -32,7 +36,7 @@ export default function RootLayout({
           rel="stylesheet" 
         />
       </head>
-      <body className="antialiased">
+      <body className="antialiased font-sans">
         <main className="relative min-h-screen">
           {children}
         </main>
@@ -43,11 +47,12 @@ export default function RootLayout({
           toastOptions={{
             duration: 4000,
             style: {
-              background: "rgba(255, 255, 255, 0.1)",
+              background: "rgba(255, 255, 255, 0.15)",
               backdropFilter: "blur(16px)",
+              WebkitBackdropFilter: "blur(16px)",
               border: "1px solid rgba(255, 255, 255, 0.2)",
               borderRadius: "12px",
-              color: "white",
+              color: "rgba(255, 255, 255, 0.9)",
               fontWeight: "500",
               fontSize: "14px",
               padding: "12px 16px",
@@ -60,7 +65,9 @@ export default function RootLayout({
               },
               style: {
                 border: "1px solid rgba(16, 185, 129, 0.3)",
-                background: "rgba(16, 185, 129, 0.1)",
+                background: "rgba(16, 185, 129, 0.15)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
               },
             },
             error: {
@@ -70,7 +77,9 @@ export default function RootLayout({
               },
               style: {
                 border: "1px solid rgba(239, 68, 68, 0.3)",
-                background: "rgba(239, 68, 68, 0.1)",
+                background: "rgba(239, 68, 68, 0.15)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
               },
             },
             loading: {
@@ -80,7 +89,9 @@ export default function RootLayout({
               },
               style: {
                 border: "1px solid rgba(59, 130, 246, 0.3)",
-                background: "rgba(59, 130, 246, 0.1)",
+                background: "rgba(59, 130, 246, 0.15)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
               },
             },
           }} 
