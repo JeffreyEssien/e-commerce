@@ -1,7 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['cdn.builder.io'],
+    domains: [
+      'cdn.builder.io',
+      'qtpckupybqvqttnevyss.supabase.co', // Supabase storage domain
+    ],
     formats: ['image/webp', 'image/avif'],
   },
   // Enable React strict mode
