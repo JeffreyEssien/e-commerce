@@ -1,31 +1,39 @@
 @import "tailwindcss";
 
+@theme {
+  --color-background: #0a0a0a;
+  --color-foreground: #ededed;
+  --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-family-mono: 'JetBrains Mono', Consolas, monospace;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+}
+
+@media (prefers-color-scheme: light) {
+  @theme {
+    --color-background: #f8fafc;
+    --color-foreground: #1e293b;
+  }
+}
+
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
   --glass-bg: rgba(255, 255, 255, 0.1);
   --glass-border: rgba(255, 255, 255, 0.18);
   --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-  --backdrop-blur: blur(4px);
+  --backdrop-blur: blur(10px);
   --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   --gradient-tertiary: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', Consolas, monospace;
-}
-
 @media (prefers-color-scheme: light) {
   :root {
-    --background: #f8fafc;
-    --foreground: #1e293b;
     --glass-bg: rgba(255, 255, 255, 0.25);
     --glass-border: rgba(255, 255, 255, 0.3);
     --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    --backdrop-blur: blur(12px);
   }
 }
 
@@ -35,13 +43,14 @@
 
 html {
   scroll-behavior: smooth;
+  font-family: var(--font-family-sans);
 }
 
 body {
   background: var(--gradient-primary);
   background-attachment: fixed;
-  color: var(--foreground);
-  font-family: var(--font-sans);
+  color: var(--color-foreground);
+  font-family: var(--font-family-sans);
   margin: 0;
   padding: 0;
   min-height: 100vh;
@@ -63,7 +72,7 @@ body::before {
   pointer-events: none;
 }
 
-/* Glassmorphism Utilities */
+/* Base Glass Effect */
 .glass {
   background: var(--glass-bg);
   backdrop-filter: var(--backdrop-blur);
@@ -73,29 +82,65 @@ body::before {
   border-radius: 16px;
 }
 
+/* Glass Card Component */
 .glass-card {
-  @apply glass p-6 transition-all duration-300 hover:shadow-2xl hover:scale-105;
   background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: var(--glass-shadow);
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
 }
 
+.glass-card:hover {
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  transform: scale(1.02);
+}
+
+/* Glass Button Component */
 .glass-button {
-  @apply glass px-6 py-3 font-medium transition-all duration-300 hover:shadow-lg active:scale-95;
   background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: var(--glass-shadow);
+  border-radius: 12px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
   color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
 .glass-button:hover {
   background: rgba(255, 255, 255, 0.3);
   transform: translateY(-2px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
 }
 
+.glass-button:active {
+  transform: scale(0.95);
+}
+
+/* Glass Input Component */
 .glass-input {
-  @apply glass px-4 py-3 w-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/30;
   background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: var(--glass-shadow);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  width: 100%;
   color: rgba(255, 255, 255, 0.9);
+  transition: all 0.3s ease;
+  outline: none;
 }
 
 .glass-input::placeholder {
@@ -105,30 +150,37 @@ body::before {
 .glass-input:focus {
   background: rgba(255, 255, 255, 0.15);
   border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
 }
 
+/* Glass Navigation */
 .glass-nav {
-  @apply glass;
   background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--glass-shadow);
+  border-radius: 16px;
 }
 
+/* Glass Sidebar */
 .glass-sidebar {
-  @apply glass;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--glass-shadow);
+  border-radius: 16px;
 }
 
+/* Glass Modal */
 .glass-modal {
-  @apply glass;
   background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: var(--glass-shadow);
+  border-radius: 16px;
 }
 
 /* Gradient Backgrounds */
@@ -153,23 +205,26 @@ body::before {
 /* Text Gradients */
 .text-gradient-primary {
   background: var(--gradient-primary);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: transparent;
 }
 
 .text-gradient-secondary {
   background: var(--gradient-secondary);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: transparent;
 }
 
 .text-gradient-tertiary {
   background: var(--gradient-tertiary);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: transparent;
 }
 
 /* Animation Classes */
@@ -228,7 +283,7 @@ body::before {
 
 .hover-lift:hover {
   transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
 .hover-glow:hover {
@@ -268,24 +323,20 @@ body::before {
 /* Responsive Glass Effects */
 @media (max-width: 768px) {
   .glass-card {
-    @apply p-4;
+    padding: 1rem;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
   
   .glass-button {
-    @apply px-4 py-2 text-sm;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
   }
   
   .glass-input {
-    @apply px-3 py-2 text-sm;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
   }
-}
-
-/* Dark/Light Theme Toggle */
-.theme-toggle {
-  @apply glass-button w-12 h-12 rounded-full flex items-center justify-center;
-  background: rgba(255, 255, 255, 0.1);
 }
 
 /* Custom Scrollbar */
@@ -309,7 +360,7 @@ body::before {
 
 /* Utility Classes */
 .text-shadow {
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .blur-sm {
@@ -334,7 +385,7 @@ body::before {
 
 /* Status Indicators */
 .status-online {
-  @apply relative;
+  position: relative;
 }
 
 .status-online::after {
@@ -360,4 +411,80 @@ body::before {
   100% {
     box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
   }
+}
+
+/* Enhanced Glassmorphism Effects */
+.glass-intense {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 8px 32px 0 rgba(31, 38, 135, 0.37),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+}
+
+.glass-subtle {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.2);
+}
+
+/* Theme Toggle */
+.theme-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Fix for potential conflicts */
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+}
+
+/* Ensure proper text visibility */
+.text-white {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.text-white\/70 {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.text-white\/80 {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.text-white\/60 {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.text-white\/50 {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Enhanced button states */
+.glass-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.glass-button:disabled:hover {
+  transform: none;
+  background: rgba(255, 255, 255, 0.2);
 }
