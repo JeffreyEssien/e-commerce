@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#667eea",
+  themeColor: "#3b82f6",
 };
 
 export default function RootLayout({
@@ -47,27 +47,28 @@ export default function RootLayout({
           toastOptions={{
             duration: 4000,
             style: {
-              background: "rgba(255, 255, 255, 0.15)",
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
+              background: "rgba(255, 255, 255, 0.9)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              border: "1px solid rgba(59, 130, 246, 0.2)",
               borderRadius: "12px",
-              color: "rgba(255, 255, 255, 0.9)",
+              color: "#1e293b",
               fontWeight: "500",
               fontSize: "14px",
               padding: "12px 16px",
-              boxShadow: "0 8px 32px rgba(31, 38, 135, 0.37)",
+              boxShadow: "0 8px 32px rgba(59, 130, 246, 0.15)",
             },
             success: {
               iconTheme: {
-                primary: "#10b981",
+                primary: "#22c55e",
                 secondary: "white",
               },
               style: {
-                border: "1px solid rgba(16, 185, 129, 0.3)",
-                background: "rgba(16, 185, 129, 0.15)",
-                backdropFilter: "blur(16px)",
-                WebkitBackdropFilter: "blur(16px)",
+                border: "1px solid rgba(34, 197, 94, 0.3)",
+                background: "rgba(240, 253, 244, 0.9)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                color: "#065f46",
               },
             },
             error: {
@@ -77,9 +78,10 @@ export default function RootLayout({
               },
               style: {
                 border: "1px solid rgba(239, 68, 68, 0.3)",
-                background: "rgba(239, 68, 68, 0.15)",
-                backdropFilter: "blur(16px)",
-                WebkitBackdropFilter: "blur(16px)",
+                background: "rgba(254, 242, 242, 0.9)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                color: "#991b1b",
               },
             },
             loading: {
@@ -89,9 +91,10 @@ export default function RootLayout({
               },
               style: {
                 border: "1px solid rgba(59, 130, 246, 0.3)",
-                background: "rgba(59, 130, 246, 0.15)",
-                backdropFilter: "blur(16px)",
-                WebkitBackdropFilter: "blur(16px)",
+                background: "rgba(239, 246, 255, 0.9)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                color: "#1e40af",
               },
             },
           }} 
