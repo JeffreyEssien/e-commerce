@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 
 interface Campus {
   id: string;
@@ -22,6 +24,8 @@ export default function LoginPage() {
   const [bio, setBio] = useState<string>("");
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [isLogin, setIsLogin] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   const router = useRouter();
 
@@ -81,187 +85,417 @@ export default function LoginPage() {
       return;
     }
 
-    if (isLogin) {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: cleanEmail,
-        password,
-      });
+    setIsLoading(true);
 
-      if (error) {
-        toast.error(
-          error.message === "Email not confirmed"
-            ? "Please confirm your email before logging in."
-            : error.message
-        );
-        return;
-      }
-
-      toast.success("Logged in");
-      if (data.user?.id) await redirectByRole(data.user.id);
-    } else {
-      const { data, error } = await supabase.auth.signUp({
-        email: cleanEmail,
-        password,
-      });
-
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-
-      const userId = data.user?.id;
-      if (!userId) return;
-
-      // Insert into users table
-      await supabase.from("users").insert([
-        {
-          id: userId,
+    try {
+      if (isLogin) {
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: cleanEmail,
-          name,
-          role,
-          campus_id: campusId,
-          wallet: 0,
-        },
-      ]);
+          password,
+        });
 
-      // Insert into vendors if vendor role
-      if (role === "vendor") {
-        const { error: vendorErr } = await supabase.from("vendors").insert([
+        if (error) {
+          toast.error(
+            error.message === "Email not confirmed"
+              ? "Please confirm your email before logging in."
+              : error.message
+          );
+          return;
+        }
+
+        toast.success("🎉 Welcome back!");
+        if (data.user?.id) await redirectByRole(data.user.id);
+      } else {
+        const { data, error } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password,
+        });
+
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+
+        const userId = data.user?.id;
+        if (!userId) return;
+
+        // Insert into users table
+        await supabase.from("users").insert([
           {
             id: userId,
-            shop_name: shopName,
-            plan: "free",
-            rating: 0,
-            ratings_count: 0,
-            bio,
             email: cleanEmail,
+            name,
+            role,
             campus_id: campusId,
+            wallet: 0,
           },
         ]);
 
-        if (vendorErr) {
-          toast.error("Failed to create vendor profile");
-          return;
-        }
-      }
+        // Insert into vendors if vendor role
+        if (role === "vendor") {
+          const { error: vendorErr } = await supabase.from("vendors").insert([
+            {
+              id: userId,
+              shop_name: shopName,
+              plan: "free",
+              rating: 0,
+              ratings_count: 0,
+              bio,
+              email: cleanEmail,
+              campus_id: campusId,
+              status: "pending", // Vendors need admin approval
+            },
+          ]);
 
-      toast.success("Account created — please confirm your email");
+          if (vendorErr) {
+            toast.error("Failed to create vendor profile");
+            return;
+          }
+        }
+
+        toast.success("🎉 Account created successfully! Please confirm your email to continue.");
+      }
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Google login
   const handleGoogleLogin = async () => {
+    setIsLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
     });
-    if (error) toast.error("Google login failed");
+    if (error) {
+      toast.error("Google login failed");
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 text-black">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-4 text-center">
-          {isLogin ? "Login" : "Create an Account"}
-        </h1>
+    <div className="min-h-screen flex items-center justify-center p-6">
+      {/* Background Elements */}
+      <motion.div
+        className="absolute top-20 left-20 w-32 h-32 rounded-full bg-gradient-secondary opacity-20"
+        animate={{ y: [-20, 20, -20], rotate: 360 }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="absolute bottom-20 right-20 w-24 h-24 rounded-full bg-gradient-tertiary opacity-20"
+        animate={{ y: [20, -20, 20], rotate: -360 }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+      />
 
-        {/* Email */}
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full mb-3 p-3 border rounded"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-
-        {/* Password */}
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full mb-4 p-3 border rounded"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-
-        {/* Extra signup fields */}
-        {!isLogin && (
-          <>
-            <input
-              type="text"
-              placeholder="Full name"
-              className="w-full mb-3 p-3 border rounded"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full mb-3 p-3 border rounded"
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8"
+        >
+          <Link href="/">
+            <motion.h1 
+              className="text-4xl font-bold text-gradient-primary mb-2 cursor-pointer"
+              whileHover={{ scale: 1.05 }}
             >
-              <option value="">Select role</option>
-              <option value="vendor">Vendor</option>
-              <option value="customer">Customer</option>
-            </select>
+              Prime Stores
+            </motion.h1>
+          </Link>
+          <p className="text-white/70">
+            {isLogin ? "Welcome back!" : "Join our campus marketplace"}
+          </p>
+        </motion.div>
 
-            <select
-              value={campusId}
-              onChange={(e) => setCampusId(e.target.value)}
-              className="w-full mb-3 p-3 border rounded"
+        {/* Main Form */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2 }}
+          className="glass-card"
+        >
+          <div className="flex items-center justify-center mb-6">
+            <motion.button
+              onClick={() => setIsLogin(true)}
+              className={`px-6 py-2 rounded-l-lg transition-all ${
+                isLogin 
+                  ? "bg-gradient-primary text-white" 
+                  : "glass text-white/70 hover:text-white"
+              }`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              <option value="">Select campus</option>
-              {campuses.map((campus) => (
-                <option key={campus.id} value={campus.id}>
-                  {campus.name}
-                </option>
-              ))}
-            </select>
+              Login
+            </motion.button>
+            <motion.button
+              onClick={() => setIsLogin(false)}
+              className={`px-6 py-2 rounded-r-lg transition-all ${
+                !isLogin 
+                  ? "bg-gradient-primary text-white" 
+                  : "glass text-white/70 hover:text-white"
+              }`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Sign Up
+            </motion.button>
+          </div>
 
-            {role === "vendor" && (
-              <>
+          <AnimatePresence mode="wait">
+            <motion.form
+              key={isLogin ? "login" : "signup"}
+              initial={{ opacity: 0, x: isLogin ? -20 : 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: isLogin ? 20 : -20 }}
+              transition={{ duration: 0.3 }}
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleEmailAuth();
+              }}
+              className="space-y-4"
+            >
+              {/* Email */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
                 <input
-                  type="text"
-                  placeholder="Shop Name"
-                  className="w-full mb-3 p-3 border rounded"
-                  value={shopName}
-                  onChange={(e) => setShopName(e.target.value)}
+                  type="email"
+                  placeholder="📧 Email Address"
+                  className="glass-input w-full"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
-                <textarea
-                  placeholder="Shop Bio"
-                  className="w-full mb-3 p-3 border rounded"
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
+              </motion.div>
+
+              {/* Password */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="relative"
+              >
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="🔒 Password"
+                  className="glass-input w-full pr-12"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
-              </>
-            )}
-          </>
-        )}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white/80"
+                >
+                  {showPassword ? "🙈" : "👁️"}
+                </button>
+              </motion.div>
 
-        {/* Auth buttons */}
-        <button
-          onClick={handleEmailAuth}
-          className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700"
-        >
-          {isLogin ? "Login" : "Sign Up"}
-        </button>
+              {/* Extra signup fields */}
+              <AnimatePresence>
+                {!isLogin && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-4"
+                  >
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                    >
+                      <input
+                        type="text"
+                        placeholder="👤 Full Name"
+                        className="glass-input w-full"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                      />
+                    </motion.div>
 
-        <div className="my-4 text-center text-sm text-gray-500">or</div>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                    >
+                      <select
+                        value={role}
+                        onChange={(e) => setRole(e.target.value)}
+                        className="glass-input w-full"
+                        required
+                      >
+                        <option value="">🎭 Select Your Role</option>
+                        <option value="customer">🛍️ Student/Customer</option>
+                        <option value="vendor">🏪 Campus Vendor</option>
+                      </select>
+                    </motion.div>
 
-        <button
-          onClick={handleGoogleLogin}
-          className="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600"
-        >
-          Continue with Google
-        </button>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 }}
+                    >
+                      <select
+                        value={campusId}
+                        onChange={(e) => setCampusId(e.target.value)}
+                        className="glass-input w-full"
+                        required
+                      >
+                        <option value="">🏫 Select Your Campus</option>
+                        {campuses.map((campus) => (
+                          <option key={campus.id} value={campus.id}>
+                            {campus.name}
+                          </option>
+                        ))}
+                      </select>
+                    </motion.div>
 
-        <p className="mt-4 text-center text-sm text-gray-600">
-          {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
-          <button
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-indigo-600 hover:underline"
+                    <AnimatePresence>
+                      {role === "vendor" && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-4"
+                        >
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.6 }}
+                          >
+                            <input
+                              type="text"
+                              placeholder="🏪 Shop Name"
+                              className="glass-input w-full"
+                              value={shopName}
+                              onChange={(e) => setShopName(e.target.value)}
+                              required
+                            />
+                          </motion.div>
+                          
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.7 }}
+                          >
+                            <textarea
+                              placeholder="📝 Shop Description (Tell customers about your business)"
+                              className="glass-input w-full h-20 resize-none"
+                              value={bio}
+                              onChange={(e) => setBio(e.target.value)}
+                              required
+                              rows={3}
+                            />
+                          </motion.div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Submit Button */}
+              <motion.button
+                type="submit"
+                disabled={isLoading}
+                className={`glass-button w-full py-4 text-lg font-medium ${
+                  isLoading 
+                    ? "opacity-50 cursor-not-allowed" 
+                    : "bg-gradient-primary hover:bg-gradient-secondary"
+                }`}
+                whileHover={!isLoading ? { scale: 1.02, y: -2 } : {}}
+                whileTap={!isLoading ? { scale: 0.98 } : {}}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="loading-spinner mr-2"></div>
+                    {isLogin ? "Signing In..." : "Creating Account..."}
+                  </div>
+                ) : (
+                  `${isLogin ? "🚀 Sign In" : "🎉 Create Account"}`
+                )}
+              </motion.button>
+            </motion.form>
+          </AnimatePresence>
+
+          {/* Divider */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9 }}
+            className="my-6 text-center text-sm text-white/50"
           >
-            {isLogin ? "Sign Up" : "Login"}
-          </button>
-        </p>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/20"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-transparent px-2">or continue with</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Google Login */}
+          <motion.button
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
+            className="glass-button w-full py-3 bg-red-500/20 hover:bg-red-500/30 border-red-400/30"
+            whileHover={!isLoading ? { scale: 1.02 } : {}}
+            whileTap={!isLoading ? { scale: 0.98 } : {}}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0 }}
+          >
+            {isLoading ? (
+              <div className="flex items-center justify-center">
+                <div className="loading-spinner mr-2"></div>
+                Connecting...
+              </div>
+            ) : (
+              "🔴 Continue with Google"
+            )}
+          </motion.button>
+
+          {/* Footer Links */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.1 }}
+            className="mt-6 text-center"
+          >
+            <Link href="/">
+              <motion.button 
+                className="text-white/60 hover:text-white/80 text-sm"
+                whileHover={{ scale: 1.05 }}
+              >
+                ← Back to Home
+              </motion.button>
+            </Link>
+          </motion.div>
+
+          {/* Terms Notice */}
+          {!isLogin && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2 }}
+              className="text-xs text-white/50 text-center mt-4"
+            >
+              By creating an account, you agree to our Terms of Service and Privacy Policy.
+              {role === "vendor" && " Vendor accounts require admin approval."}
+            </motion.p>
+          )}
+        </motion.div>
       </div>
     </div>
   );
