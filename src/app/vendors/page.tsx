@@ -2,15 +2,59 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { supabase } from "../../../lib/supabase";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import PendingOrders from "./pendingOrders";
 import ManageProducts from "./manageProducts";
 import VendorAnalytics from "./vendorAnalytics";
 
 export default function VendorDashboard() {
   const [activeTab, setActiveTab] = useState<"orders" | "products" | "analytics">("orders");
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
+  const router = useRouter();
+
+  // Check authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error || !session) {
+          toast.error("Please log in to access the vendor dashboard");
+          router.push("/login");
+          return;
+        }
+
+        // Verify user role
+        const { data: profile, error: profileError } = await supabase
+          .from("users")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profileError || !profile || profile.role !== "vendor") {
+          toast.error("Access denied. Vendor account required.");
+          router.push("/login");
+          return;
+        }
+
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error("Auth check error:", error);
+        toast.error("Authentication error. Please log in.");
+        router.push("/login");
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
 
   const tabs = [
     { 
@@ -32,6 +76,32 @@ export default function VendorDashboard() {
       description: "Track your performance and sales"
     }
   ];
+
+  // Show loading screen while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="glass-card text-center py-12"
+        >
+          <div className="loading-spinner mb-4 mx-auto"></div>
+          <h3 className="text-xl font-semibold text-white mb-2">
+            Verifying Access...
+          </h3>
+          <p className="text-white/70">
+            Please wait while we check your credentials
+          </p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Don't render dashboard if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen p-6">
