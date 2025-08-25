@@ -3,7 +3,22 @@ const nextConfig = {
   images: {
     domains: [
       'cdn.builder.io',
-      'qtpckupybqvqttnevyss.supabase.co', // Supabase storage domain
+      'qtpckupybqvqttnevyss.supabase.co', // Current Supabase storage domain
+    ],
+    // Alternative: Use remotePatterns for more flexible matching
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.builder.io',
+        port: '',
+        pathname: '/**',
+      }
     ],
     formats: ['image/webp', 'image/avif'],
   },
